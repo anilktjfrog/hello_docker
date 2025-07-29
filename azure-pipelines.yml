@@ -66,9 +66,6 @@ jobs:
               inputs:
                 jfrogPlatformConnection: $(JF_AZURE_OIDC) # Ensure this connection is configured for Artifactory
                 command: |
-                  # Build the Docker image using JFrog CLI
-                  # The '--tag' flag automatically tags the image with the specified repository and tag
-                  # The '.' at the end specifies the build context (current directory)
                   jf docker build --tag "$(JF_URL)/${JF_DOCKER_REGISTRY}/${DOCKER_IMAGE}:${tag}" .
             
             - task: JfrogCliV2@1
@@ -76,7 +73,5 @@ jobs:
               inputs:
                 jfrogPlatformConnection: $(JF_AZURE_OIDC) # Ensure this connection is configured for Artifactory
                 command: |
-                  # Push the Docker image to JFrog Artifactory
-                  # The JFrog CLI automatically handles authentication with Artifactory if jfrogPlatformConnection is set up correctly.
                   jf docker push "$(JF_URL)/${JF_DOCKER_REGISTRY}/${DOCKER_IMAGE}:${tag}"
             
