@@ -62,7 +62,7 @@ jobs:
                   # Log in to the Docker registry using JFrog CLI
                   # The JFrog CLI handles the credentials based on the jfrogPlatformConnection
                   # It's important to extract the registry URL from the imageRepository
-                  jf docker login $(JF_URL) -u $(oidc_user) -p $(oidc_token)
+                  docker login $(JF_URL) -u $(oidc_user) -p $(oidc_token)
             
             - task: JfrogCliV2@1
               displayName: JFrog CLI Docker Build
