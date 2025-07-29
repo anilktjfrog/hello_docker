@@ -54,15 +54,12 @@ jobs:
                   echo "OIDC Username (from output): $(oidc_user)"
                   echo "OIDC Token (from output): $(oidc_token)"
             
-            - task: JfrogCliV2@1
+            - task: Bash@3 # Changed to Bash@3 for Ubuntu agent
               displayName: JFrog CLI Docker Login
               inputs:
-                jfrogPlatformConnection: $(JF_AZURE_OIDC) # Ensure this connection is configured for Artifactory
-                command: |
-                  # Log in to the Docker registry using JFrog CLI
-                  # The JFrog CLI handles the credentials based on the jfrogPlatformConnection
-                  # It's important to extract the registry URL from the imageRepository
-                  docker login $(JF_URL) -u $(oidc_user) -p $(oidc_token)
+                targetType: 'inline'
+                script: |
+                  docker login $(JF_URL) -u $(oidc_user) -p $(oidc_token)            
             
             - task: JfrogCliV2@1
               displayName: JFrog CLI Docker Build
