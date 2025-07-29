@@ -27,7 +27,7 @@ variables:
   jfrogDockerRegistryServiceConnection: 'your-jfrog-docker-registry-service-connection' # This variable is no longer directly used by Docker@2, but might be useful for context.
 
 jobs:
-- deployment: MVN_PIPELINE
+- deployment: DOCKER_PIPELINE
   displayName: End to End MVN pipeline
   environment: 
     name: gcp
@@ -40,7 +40,7 @@ jobs:
             - checkout: self
             - task: JfrogCliV2@1
               inputs:
-                jfrogPlatformConnection: JF_AZURE_OIDC
+                jfrogPlatformConnection: $(JF_AZURE_OIDC)
                 command: |
                   jf c show
                   jf rt ping
@@ -57,7 +57,7 @@ jobs:
             - task: JfrogCliV2@1
               displayName: JFrog CLI Docker Login
               inputs:
-                jfrogPlatformConnection: JF_AZURE_OIDC # Ensure this connection is configured for Artifactory
+                jfrogPlatformConnection: $(JF_AZURE_OIDC) # Ensure this connection is configured for Artifactory
                 command: |
                   # Log in to the Docker registry using JFrog CLI
                   # The JFrog CLI handles the credentials based on the jfrogPlatformConnection
@@ -67,7 +67,7 @@ jobs:
             - task: JfrogCliV2@1
               displayName: JFrog CLI Docker Build
               inputs:
-                jfrogPlatformConnection: 'azure-jfrog-platform-oidc' # Ensure this connection is configured for Artifactory
+                jfrogPlatformConnection: $(JF_AZURE_OIDC) # Ensure this connection is configured for Artifactory
                 command: |
                   # Build the Docker image using JFrog CLI
                   # The '--tag' flag automatically tags the image with the specified repository and tag
@@ -77,7 +77,7 @@ jobs:
             - task: JfrogCliV2@1
               displayName: JFrog CLI Docker Push to JFrog
               inputs:
-                jfrogPlatformConnection: 'azure-jfrog-platform-oidc' # Ensure this connection is configured for Artifactory
+                jfrogPlatformConnection: $(JF_AZURE_OIDC) # Ensure this connection is configured for Artifactory
                 command: |
                   # Push the Docker image to JFrog Artifactory
                   # The JFrog CLI automatically handles authentication with Artifactory if jfrogPlatformConnection is set up correctly.
