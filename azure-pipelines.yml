@@ -16,6 +16,7 @@ variables:
   JF_URL: 'https://psazuse.jfrog.io'
   JF_DOCKER_REGISTRY: 'azure-docker'
   JF_AZURE_OIDC: 'azure-jfrog-platform-oidc'
+  JF_DOCKER_URL: 'psazuse.jfrog.io'
   
   # Custom variables for Docker image
   # Replace 'your-docker-image-name' with the desired name for your Docker image
@@ -66,11 +67,12 @@ jobs:
               inputs:
                 jfrogPlatformConnection: $(JF_AZURE_OIDC) # Ensure this connection is configured for Artifactory
                 command: |
-                  jf docker build --tag "$(JF_URL)/$(JF_DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(tag)" .
+                  jf docker build --tag "$(JF_DOCKER_URL)/$(JF_DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(tag)" .
             
             - task: JfrogCliV2@1
               displayName: JFrog CLI Docker Push to JFrog
               inputs:
                 jfrogPlatformConnection: $(JF_AZURE_OIDC) # Ensure this connection is configured for Artifactory
                 command: |
-                  jf docker push "$(JF_URL)/$(JF_DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(tag)"
+                  jf docker push "$(JF_DOCKER_URL)/$(JF_DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(tag)"
+            
