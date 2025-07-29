@@ -66,11 +66,11 @@ jobs:
               inputs:
                 jfrogPlatformConnection: $(JF_AZURE_OIDC) # Ensure this connection is configured for Artifactory
                 command: |
-                  sudo jf docker build --tag "$(JF_URL)/$(JF_DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(tag)" .
+                  jf docker build --tag "$(JF_URL)/$(JF_DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(tag)" .
             
             - task: JfrogCliV2@1
               displayName: JFrog CLI Docker Push to JFrog
               inputs:
                 jfrogPlatformConnection: $(JF_AZURE_OIDC) # Ensure this connection is configured for Artifactory
                 command: |
-                  sudo jf docker push "$(JF_URL)/$(JF_DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(tag)"
+                  jf docker push "$(JF_URL)/$(JF_DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(tag)"
