@@ -1,0 +1,85 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  # Predefined Azure Pipelines variables. There's no need to modify them.
+  JF_GIT_PROJECT: $(System.TeamProject)
+  JF_GIT_REPO: $(Build.Repository.Name)
+  JF_GIT_API_ENDPOINT: $(System.CollectionUri)
+  JF_GIT_BASE_BRANCH: $(Build.SourceBranchName)
+  JF_GIT_OWNER: $(System.TeamProject)
+  JF_GIT_PROVIDER: 'azureRepos'
+  tag: '$(Build.BuildId)'
+  JF_URL: 'https://psazuse.jfrog.io'
+  JF_DOCKER_REGISTRY: 'azure-docker'
+  JF_AZURE_OIDC: 'azure-jfrog-platform-oidc'
+  
+  # Custom variables for Docker image
+  # Replace 'your-docker-image-name' with the desired name for your Docker image
+  # This will typically be in the format: <jfrog-artifactory-url>/<repository-name>/<image-name>
+  # Example: myartifactory.jfrog.io/docker-local/my-app
+  DOCKER_IMAGE: 'azure-test-dokcer' 
+  # Replace 'your-jfrog-docker-registry-service-connection' with the name of your 
+  # Azure DevOps Service Connection of type 'Docker Registry' that points to your JFrog Artifactory.
+  jfrogDockerRegistryServiceConnection: 'your-jfrog-docker-registry-service-connection' # This variable is no longer directly used by Docker@2, but might be useful for context.
+
+jobs:
+- deployment: MVN_PIPELINE
+  displayName: End to End MVN pipeline
+  environment: 
+    name: gcp
+    resourceType: virtualMachine
+    resourceName: ip-172-18-98-66
+  strategy:
+    runOnce:
+      deploy:   
+          steps:
+            - checkout: self
+            - task: JfrogCliV2@1
+              inputs:
+                jfrogPlatformConnection: JF_AZURE_OIDC
+                command: |
+                  jf c show
+                  jf rt ping
+                  jf rt curl "/api/repositories?type=virtual"
+
+            - task: Bash@3 # Changed to Bash@3 for Ubuntu agent
+              displayName: Display OIDC User Info
+              inputs:
+                targetType: 'inline'
+                script: |
+                  echo "OIDC Username (from output): $(oidc_user)"
+                  echo "OIDC Token (from output): $(oidc_token)"
+            
+            - task: JfrogCliV2@1
+              displayName: JFrog CLI Docker Login
+              inputs:
+                jfrogPlatformConnection: JF_AZURE_OIDC # Ensure this connection is configured for Artifactory
+                command: |
+                  # Log in to the Docker registry using JFrog CLI
+                  # The JFrog CLI handles the credentials based on the jfrogPlatformConnection
+                  # It's important to extract the registry URL from the imageRepository
+                  jf docker login $(JF_URL) -u $(oidc_user) -p $(oidc_token)
+            
+            - task: JfrogCliV2@1
+              displayName: JFrog CLI Docker Build
+              inputs:
+                jfrogPlatformConnection: 'azure-jfrog-platform-oidc' # Ensure this connection is configured for Artifactory
+                command: |
+                  # Build the Docker image using JFrog CLI
+                  # The '--tag' flag automatically tags the image with the specified repository and tag
+                  # The '.' at the end specifies the build context (current directory)
+                  jf docker build --tag "$(JF_URL)/${JF_DOCKER_REGISTRY}/${DOCKER_IMAGE}:${tag}" .
+            
+            - task: JfrogCliV2@1
+              displayName: JFrog CLI Docker Push to JFrog
+              inputs:
+                jfrogPlatformConnection: 'azure-jfrog-platform-oidc' # Ensure this connection is configured for Artifactory
+                command: |
+                  # Push the Docker image to JFrog Artifactory
+                  # The JFrog CLI automatically handles authentication with Artifactory if jfrogPlatformConnection is set up correctly.
+                  jf docker push "$(JF_URL)/${JF_DOCKER_REGISTRY}/${DOCKER_IMAGE}:${tag}"
+            
